@@ -1,3 +1,3 @@
-export * from "./core/SpotifyTypes";
-export {SpotifyHelper} from "./core/SpotifyHelper";
-export {SpotifyConfiguration} from "./core/SpotifyConfiguration";
+export * from "./core/SpotifyTypes.js";
+export {SpotifyHelper} from "./core/SpotifyHelper.js";
+export {SpotifyConfiguration} from "./core/SpotifyConfiguration.js";

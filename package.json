@@ -2,6 +2,7 @@
   "name": "@benliam12/spotify-api-helper",
   "version": "0.0.0-development",
   "description": "A utility package for Node.js",
+  "type": "module",   
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [

@@ -9,3 +9,7 @@ export interface Album {
 export interface Track{
     
 }
+
+export interface Artist {
+
+}
