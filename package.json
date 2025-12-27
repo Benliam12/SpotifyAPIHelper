@@ -1,0 +1,45 @@
+{
+  "name": "@benliam12/spotify-api-helper",
+  "version": "0.0.0-development",
+  "description": "A utility package for Node.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "prepare": "npm run build",
+    "semantic-release": "semantic-release"
+  },
+  "keywords": [
+    "utility",
+    "helpers"
+  ],
+  "author": "benliam12",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Benliam12/SpotifyAPIHelper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Benliam12/SpotifyAPIHelper/issues"
+  },
+  "homepage": "https://github.com/Benliam12/SpotifyAPIHelper#readme",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.3",
+    "@typescript-eslint/eslint-plugin": "^8.50.1",
+    "@typescript-eslint/parser": "^8.50.1",
+    "eslint": "^9.39.2",
+    "jest": "^29.7.0",
+    "semantic-release": "^25.0.2",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
