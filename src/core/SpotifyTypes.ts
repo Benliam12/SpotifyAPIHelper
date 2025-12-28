@@ -4,7 +4,7 @@ export interface Album {
     market: string;
     album_type: string;
     total_tracks: number;
-    available_markets: string[];
+    data?: any;
 }
 
 export interface Track{
@@ -19,4 +19,11 @@ export interface ClientToken{
     access_token: string;
     token_type: string;
     expires_at: Date;
+}
+
+export enum SearchType{
+    ALBUM = "album",
+    ARTIST = "artist",
+    TRACK = "track",
+    PLAYLIST = "playlist"
 }

@@ -1,5 +1,5 @@
 import { SpotifyConfiguration } from "./SpotifyConfiguration.js";
-import { Album, Track, Artist, ClientToken } from "./SpotifyTypes.js";
+import { Album, Track, Artist, ClientToken, SearchType } from "./SpotifyTypes.js";
 
 /**
  * Result wrapper for operations that can fail
@@ -233,10 +233,6 @@ export class SpotifyHelper {
         this.options.onError(error);
     }
 
-    test(): string {
-        return "SpotifyHelper is working!";
-    }
-
     /**
      * Get an album by ID.
      * Returns null if the request fails.
@@ -259,7 +255,7 @@ export class SpotifyHelper {
             market: data.market,
             album_type: data.album_type,
             total_tracks: data.total_tracks,
-            available_markets: data.available_markets
+            data: data
         };
         
         return album;
@@ -339,6 +335,20 @@ export class SpotifyHelper {
         }
 
         return result.data.markets || [];
+    }
+
+    async search(query: string, type: SearchType, limit: number = 20, offset: number = 0): Promise<any | null> {
+        const result = await this.makeAuthenticatedRequest<any>(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=${limit}&offset=${offset}`,
+            "search",
+            { method: "GET" }
+        );
+
+        if (!result.success) {
+            return null;
+        }
+
+        return result.data;
     }
 
     /**
