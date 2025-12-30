@@ -1,0 +1,21 @@
+# Test files and folders
+tests/
+__tests__/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Test configuration
+jest.config.js
+jest.config.cjs
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Development files
+.vscode/
+.idea/
+*.log
+.DS_Store
