@@ -10,6 +10,9 @@ export default {
       'ts-jest',
       {
         useESM: true,
+        diagnostics: {
+          ignoreCodes: [151002]  // Suppress the TS151002 warning
+        }
       },
     ],
   },

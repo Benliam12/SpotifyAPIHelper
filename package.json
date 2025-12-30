@@ -10,9 +10,9 @@
   ],
   "scripts": {
     "build": "npm run clean && tsc",
-    "test": "node --experimental-vm-modules --env-file=.env.test.local node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules --env-file=.env.test.local node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules --env-file=.env.test.local node_modules/jest/bin/jest.js --coverage",
+    "test": "node --experimental-vm-modules --no-warnings --env-file=.env.test.local node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules --no-warnings --env-file=.env.test.local node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules --no-warnings --env-file=.env.test.local node_modules/jest/bin/jest.js --coverage",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",
     "prepare": "npm run build",
