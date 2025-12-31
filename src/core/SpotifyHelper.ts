@@ -368,6 +368,13 @@ export class SpotifyHelper {
     }
 
     /**
+     * Get the current configuration.
+     */
+    getConfig(): SpotifyConfiguration {
+        return this.config;
+    }
+
+    /**
      * Get token info for debugging (without exposing the actual token).
      */
     getTokenInfo(): { hasToken: boolean; expiresAt: Date | null; isExpiringSoon: boolean } {
