@@ -5,7 +5,6 @@ import searchFixtures from "./Fixtures/Seach.json";
 import multipleAlbumsFixtures from "./Fixtures/MultipleAlbums.json";
 import singleTrackFixtures from "./Fixtures/SingleTrack.json";
 import { jest } from '@jest/globals';
-import { mock } from "node:test";
 
 describe('Spotify Helper Module', () => {
     let mockFetch: any
@@ -136,6 +135,5 @@ describe('Spotify Helper Module', () => {
                 expect(artist.name.length).toBeGreaterThan(0);
             });
         });
-    
     })
 });
