@@ -252,13 +252,46 @@ export class SpotifyHelper {
         const album: Album = {
             id: data.id,
             name: data.name,
-            market: data.market,
             album_type: data.album_type,
             total_tracks: data.total_tracks,
-            data: data
+            data: data.data
         };
         
         return album;
+    }
+
+    async getAlbums(albumIds: string[]): Promise<(Album | null)[]> {
+        const idsParam = albumIds.join(",");
+        if(albumIds.length === 0){
+            return [];
+        }
+
+        if(albumIds.length > 20){
+            throw new Error("Spotify API allows a maximum of 20 album IDs per request.");
+        }
+
+        const result = await this.makeAuthenticatedRequest<any>(
+            `https://api.spotify.com/v1/albums?ids=${idsParam}`,
+            "getAlbums",
+            { method: "GET" }
+        );
+
+        if (result.success) {
+            return result.data.map((data: any) => {
+                if(!data){
+                    return null;
+                }
+                const album: Album = {
+                    id: data.id,
+                    name: data.name,
+                    album_type: data.album_type,
+                    total_tracks: data.total_tracks,
+                    data: data.data
+                };
+                return album;
+            });
+        }
+        return [];
     }
 
     /**
@@ -272,13 +305,39 @@ export class SpotifyHelper {
             { method: "GET" }
         );
 
-        if (!result.success) {
+        if(!result.success) {
             return null;
         }
+        else{
 
-        // Map to your Track type based on your type definition
-        // For now returning null as placeholder
-        return null;
+            const {id, name, album_type, total_tracks, ...data} = result.data.album;
+            const trackAlbumData: Album = {
+                id: id,
+                name: name,
+                album_type: album_type,
+                total_tracks: total_tracks,
+                data: data
+            };
+
+            const trackArtistData: Artist[] = result.data.artists.map((artistData: any) => {
+                const {id, name, ...data} = artistData;
+                const artist: Artist = {
+                    id: id,
+                    name: name,
+                    data: data
+                };
+                return artist;
+            });
+
+            const trackData: Track = {
+                id: result.data.id,
+                name: result.data.name,
+                artists: trackArtistData,
+                album: trackAlbumData,
+                data: result.data
+            };
+            return trackData;
+        }
     }
 
     /**

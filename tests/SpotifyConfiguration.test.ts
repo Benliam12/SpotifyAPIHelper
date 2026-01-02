@@ -11,8 +11,6 @@ describe('Configuration Module', () => {
         });
     });
 
-
-
     test('Should load configuration from environment variables', () => {
         expect(process.env.SPOTIFY_CLIENT_ID).toBeDefined();
         expect(process.env.SPOTIFY_CLIENT_SECRET).toBeDefined();

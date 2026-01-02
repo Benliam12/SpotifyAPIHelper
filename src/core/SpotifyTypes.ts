@@ -1,18 +1,23 @@
 export interface Album {
     id: string;
     name: string;
-    market: string;
     album_type: string;
     total_tracks: number;
-    data?: any;
+    data: any;
 }
 
 export interface Track{
-    
+    id:string;
+    name:string;
+    artists:Artist[];
+    album:Album;
+    data:any   
 }
 
 export interface Artist {
-
+    id:string;
+    name:string;
+    data:any
 }
 
 export interface ClientToken{
