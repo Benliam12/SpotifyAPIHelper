@@ -1,6 +1,6 @@
 {
   "name": "@benliam12/spotify-api-helper",
-  "version": "1.0.0-DEV.5",
+  "version": "1.0.0-DEV.6",
   "description": "A utility package for Node.js",
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",
     "prepare": "npm run build",
-    "release": "dotenv -e .env semantic-release --no-ci",
+    "release": "dotenv -e .env -- semantic-release --no-ci --dry-run=false",
     "release:dry": "dotenv -e .env semantic-release --dry-run --no-ci"
   },
   "keywords": [
