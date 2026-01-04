@@ -37,3 +37,7 @@ instance.initialize().then(() => {
 })
 
 ```
+
+
+## Contribution
+Please open issues for any feature request or bug report. As for contributing directly to the project, feel free to make pull requests. 
