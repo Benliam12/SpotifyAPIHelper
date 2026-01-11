@@ -48,17 +48,14 @@ describe('Configuration Module', () => {
         clientSecret: 'someSecret',
         redirectUri: '',
       },
-    ])(
-      'Should be invalid when $name',
-      ({ clientId, clientSecret, redirectUri }) => {
-        const config = new SpotifyConfiguration({
-          clientId,
-          clientSecret,
-          redirectUri,
-        });
-        expect(config.isValid()).toBe(false);
-      }
-    );
+    ])('Should be invalid when $name', ({ clientId, clientSecret, redirectUri }) => {
+      const config = new SpotifyConfiguration({
+        clientId,
+        clientSecret,
+        redirectUri,
+      });
+      expect(config.isValid()).toBe(false);
+    });
   });
 
   test('Should return correct values from getters', () => {

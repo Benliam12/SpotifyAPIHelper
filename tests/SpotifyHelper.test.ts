@@ -63,10 +63,7 @@ describe('Spotify Helper Module', () => {
         json: async () => searchFixtures,
       });
 
-      const results = await spotifyHelper.search(
-        'What is sounds like',
-        SearchType.TRACK
-      );
+      const results = await spotifyHelper.search('What is sounds like', SearchType.TRACK);
       expect(results).toBeDefined();
       expect(mockFetch).toHaveBeenCalledTimes(1); // Only the search call
       expect(mockFetch).toHaveBeenCalledWith(
@@ -105,9 +102,7 @@ describe('Spotify Helper Module', () => {
         json: async () => singleTrackFixtures,
       });
 
-      const track: Track | null = await spotifyHelper.getTrack(
-        '5sBDrrtLGbV64QJnEqfjer'
-      );
+      const track: Track | null = await spotifyHelper.getTrack('5sBDrrtLGbV64QJnEqfjer');
 
       expect(track).toBeDefined();
       expect(track).not.toBeNull();
@@ -121,9 +116,7 @@ describe('Spotify Helper Module', () => {
 
       const albumObject = trackObject.album as Album;
       expect(albumObject.id).toBe('14JkAa6IiFaOh5s0nMyMU9');
-      expect(albumObject.name).toBe(
-        'KPop Demon Hunters (Soundtrack from the Netflix Film)'
-      );
+      expect(albumObject.name).toBe('KPop Demon Hunters (Soundtrack from the Netflix Film)');
       expect(albumObject.album_type).toBe('album');
       expect(albumObject.total_tracks).toBe(12);
 

@@ -1,18 +1,10 @@
 import { SpotifyConfiguration } from './SpotifyConfiguration.js';
-import {
-  Album,
-  Track,
-  Artist,
-  ClientToken,
-  SearchType,
-} from './SpotifyTypes.js';
+import { Album, Track, Artist, ClientToken, SearchType } from './SpotifyTypes.js';
 
 /**
  * Result wrapper for operations that can fail
  */
-export type SpotifyResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string; statusCode?: number };
+export type SpotifyResult<T> = { success: true; data: T } | { success: false; error: string; statusCode?: number };
 
 /**
  * Options for configuring the SpotifyHelper
@@ -49,10 +41,7 @@ export class SpotifyHelper {
   private tokenRefreshPromise: Promise<ClientToken | null> | null = null;
   private readonly options: Required<SpotifyHelperOptions>;
 
-  constructor(
-    config: SpotifyConfiguration,
-    options: SpotifyHelperOptions = {}
-  ) {
+  constructor(config: SpotifyConfiguration, options: SpotifyHelperOptions = {}) {
     this.config = config;
     this.options = {
       tokenRefreshBufferMs: options.tokenRefreshBufferMs ?? 60000,
@@ -129,10 +118,7 @@ export class SpotifyHelper {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           Authorization:
-            'Basic ' +
-            Buffer.from(
-              this.config.clientId + ':' + this.config.clientSecret
-            ).toString('base64'),
+            'Basic ' + Buffer.from(this.config.clientId + ':' + this.config.clientSecret).toString('base64'),
         },
         body: params.toString(),
       });
@@ -152,8 +138,7 @@ export class SpotifyHelper {
 
       if (!data.access_token || !data.expires_in) {
         this.handleError({
-          message:
-            'Invalid token response from Spotify - missing access_token or expires_in',
+          message: 'Invalid token response from Spotify - missing access_token or expires_in',
           operation: 'fetchNewToken',
           timestamp: new Date(),
         });
@@ -169,9 +154,7 @@ export class SpotifyHelper {
       return token;
     } catch (error) {
       this.handleError({
-        message: `Network error fetching token: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        message: `Network error fetching token: ${error instanceof Error ? error.message : String(error)}`,
         operation: 'fetchNewToken',
         timestamp: new Date(),
       });
@@ -225,8 +208,7 @@ export class SpotifyHelper {
       const data: any = await response.json();
       return { success: true, data };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.handleError({
         message: `Network error during ${operation}: ${errorMessage}`,
         operation,
@@ -277,6 +259,12 @@ export class SpotifyHelper {
     return album;
   }
 
+  /**
+   * Get a list of albums by their IDs.
+   * @param albumIds
+   * @returns
+   * @throws Error if more than 20 IDs are provided (Spotify API limit)
+   */
   async getAlbums(albumIds: string[]): Promise<(Album | null)[]> {
     const idsParam = albumIds.join(',');
     if (albumIds.length === 0) {
@@ -284,9 +272,7 @@ export class SpotifyHelper {
     }
 
     if (albumIds.length > 20) {
-      throw new Error(
-        'Spotify API allows a maximum of 20 album IDs per request.'
-      );
+      throw new Error('Spotify API allows a maximum of 20 album IDs per request.');
     }
 
     const result = await this.makeAuthenticatedRequest<any>(
@@ -313,6 +299,48 @@ export class SpotifyHelper {
     return [];
   }
 
+  async getAlbumTracks(albumId: string, limit: number = 50, offset: number = 0): Promise<Track[] | null> {
+    if (limit < 1 || limit > 50) {
+      throw new Error('Limit must be between 1 and 50');
+    }
+
+    const result = await this.makeAuthenticatedRequest<any>(
+      `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=${limit}&offset=${offset}`,
+      'getAlbumTracks',
+      { method: 'GET' }
+    );
+    if (!result.success) {
+      return null;
+    }
+
+    const tracks: Track[] = result.data.items.map((item: any) => {
+      const track: Track = {
+        id: item.id,
+        name: item.name,
+        artists: item.artists.map((artistData: any) => {
+          const { id, name, ...data } = artistData;
+          const artist: Artist = {
+            id: id,
+            name: name,
+            data: data,
+          };
+          return artist;
+        }),
+        album: {
+          id: albumId,
+          name: '',
+          album_type: '',
+          total_tracks: 0,
+          data: {},
+        },
+        data: item,
+      };
+      return track;
+    });
+
+    return tracks;
+  }
+
   /**
    * Get a track by ID.
    * Returns null if the request fails.
@@ -336,17 +364,15 @@ export class SpotifyHelper {
         data: data,
       };
 
-      const trackArtistData: Artist[] = result.data.artists.map(
-        (artistData: any) => {
-          const { id, name, ...data } = artistData;
-          const artist: Artist = {
-            id: id,
-            name: name,
-            data: data,
-          };
-          return artist;
-        }
-      );
+      const trackArtistData: Artist[] = result.data.artists.map((artistData: any) => {
+        const { id, name, ...data } = artistData;
+        const artist: Artist = {
+          id: id,
+          name: name,
+          data: data,
+        };
+        return artist;
+      });
 
       const trackData: Track = {
         id: result.data.id,
@@ -415,16 +441,9 @@ export class SpotifyHelper {
     return result.data.markets || [];
   }
 
-  async search(
-    query: string,
-    type: SearchType,
-    limit: number = 20,
-    offset: number = 0
-  ): Promise<any | null> {
+  async search(query: string, type: SearchType, limit: number = 20, offset: number = 0): Promise<any | null> {
     const result = await this.makeAuthenticatedRequest<any>(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-        query
-      )}&type=${type}&limit=${limit}&offset=${offset}`,
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=${limit}&offset=${offset}`,
       'search',
       { method: 'GET' }
     );

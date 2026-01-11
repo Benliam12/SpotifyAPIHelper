@@ -16,11 +16,7 @@ export class SpotifyConfiguration {
   }
 
   isValid(): boolean {
-    return (
-      this.clientId !== '' &&
-      this.clientSecret !== '' &&
-      this.redirectUri !== ''
-    );
+    return this.clientId !== '' && this.clientSecret !== '' && this.redirectUri !== '';
   }
 
   getClientID(): string {
