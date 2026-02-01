@@ -425,7 +425,7 @@ export class SpotifyHelper {
 
   /**
    * Get available markets.
-   * Returns empty array if the request fails.
+   * @returns Returns empty array if the request fails.
    */
   async getAvailableMarkets(): Promise<string[]> {
     const result = await this.makeAuthenticatedRequest<any>(
@@ -441,6 +441,14 @@ export class SpotifyHelper {
     return result.data.markets || [];
   }
 
+  /**
+   * Use the search endpoint.
+   * @param query
+   * @param type
+   * @param limit
+   * @param offset
+   * @returns Parsed search results or null if request fails
+   */
   async search(query: string, type: SearchType, limit: number = 20, offset: number = 0): Promise<any | null> {
     const result = await this.makeAuthenticatedRequest<any>(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=${limit}&offset=${offset}`,
@@ -452,6 +460,19 @@ export class SpotifyHelper {
       return null;
     }
 
+    return result.data;
+  }
+
+  /**
+   * Make Raw request to a given Spotify API URL.
+   * @param url
+   * @returns Parsed JSON data or null if request fails
+   */
+  async getDataFromURL(url: string): Promise<any | null> {
+    const result = await this.makeAuthenticatedRequest<any>(url, 'getDataFromURL', { method: 'GET' });
+    if (!result.success) {
+      return null;
+    }
     return result.data;
   }
 
