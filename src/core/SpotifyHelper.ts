@@ -1,5 +1,5 @@
 import { SpotifyConfiguration } from './SpotifyConfiguration.js';
-import { Album, Track, Artist, ClientToken, SearchType } from './SpotifyTypes.js';
+import { Album, Track, Artist, ClientToken, UserToken, SearchType, SpotifyScope } from './SpotifyTypes.js';
 
 /**
  * Result wrapper for operations that can fail
@@ -461,6 +461,235 @@ export class SpotifyHelper {
     }
 
     return result.data;
+  }
+
+  // ─── Authorization Code Flow (User Token) ───
+
+  /** Builds the Spotify authorization URL for user login. */
+  getAuthorizationUrl(scopes: SpotifyScope[], state?: string): string {
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: this.config.clientId,
+      redirect_uri: this.config.redirectUri,
+      scope: scopes.join(' '),
+    });
+
+    if (state) {
+      params.set('state', state);
+    }
+
+    return `https://accounts.spotify.com/authorize?${params.toString()}`;
+  }
+
+  /** Exchanges an authorization code for a UserToken. */
+  async exchangeAuthCode(code: string): Promise<UserToken | null> {
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: this.config.redirectUri,
+    });
+
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization:
+            'Basic ' + Buffer.from(this.config.clientId + ':' + this.config.clientSecret).toString('base64'),
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.handleError({
+          message: `Failed to exchange auth code: ${response.status} ${response.statusText} - ${errorText}`,
+          statusCode: response.status,
+          operation: 'exchangeAuthCode',
+          timestamp: new Date(),
+        });
+        return null;
+      }
+
+      const data: any = await response.json();
+
+      if (!data.access_token || !data.refresh_token) {
+        this.handleError({
+          message: 'Invalid token response - missing access_token or refresh_token',
+          operation: 'exchangeAuthCode',
+          timestamp: new Date(),
+        });
+        return null;
+      }
+
+      return {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        token_type: data.token_type,
+        expires_at: new Date(Date.now() + data.expires_in * 1000),
+        scope: data.scope ?? '',
+      };
+    } catch (error) {
+      this.handleError({
+        message: `Network error exchanging auth code: ${error instanceof Error ? error.message : String(error)}`,
+        operation: 'exchangeAuthCode',
+        timestamp: new Date(),
+      });
+      return null;
+    }
+  }
+
+  /** Refreshes an expired user token using its refresh token. */
+  async refreshUserToken(refreshToken: string): Promise<UserToken | null> {
+    const params = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
+
+    try {
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization:
+            'Basic ' + Buffer.from(this.config.clientId + ':' + this.config.clientSecret).toString('base64'),
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.handleError({
+          message: `Failed to refresh user token: ${response.status} ${response.statusText} - ${errorText}`,
+          statusCode: response.status,
+          operation: 'refreshUserToken',
+          timestamp: new Date(),
+        });
+        return null;
+      }
+
+      const data: any = await response.json();
+
+      if (!data.access_token) {
+        this.handleError({
+          message: 'Invalid refresh response - missing access_token',
+          operation: 'refreshUserToken',
+          timestamp: new Date(),
+        });
+        return null;
+      }
+
+      return {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token ?? refreshToken,
+        token_type: data.token_type,
+        expires_at: new Date(Date.now() + data.expires_in * 1000),
+        scope: data.scope ?? '',
+      };
+    } catch (error) {
+      this.handleError({
+        message: `Network error refreshing user token: ${error instanceof Error ? error.message : String(error)}`,
+        operation: 'refreshUserToken',
+        timestamp: new Date(),
+      });
+      return null;
+    }
+  }
+
+  // ─── User-Scoped API Methods ───
+
+  /** Makes an API request using a user-provided token. */
+  private async makeUserRequest<T>(
+    url: string,
+    userToken: UserToken,
+    operation: string,
+    options: RequestInit = {}
+  ): Promise<SpotifyResult<T>> {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${userToken.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.handleError({
+          message: `API request failed: ${response.status} ${response.statusText} - ${errorText}`,
+          statusCode: response.status,
+          operation,
+          timestamp: new Date(),
+        });
+
+        return {
+          success: false,
+          error: `Request failed: ${response.status} ${response.statusText}`,
+          statusCode: response.status,
+        };
+      }
+
+      const data: any = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.handleError({
+        message: `Network error during ${operation}: ${errorMessage}`,
+        operation,
+        timestamp: new Date(),
+      });
+
+      return {
+        success: false,
+        error: `Network error: ${errorMessage}`,
+      };
+    }
+  }
+
+  /** Get the current user's profile. Requires `user-read-private` scope. */
+  async getCurrentUserProfile(userToken: UserToken): Promise<any | null> {
+    const result = await this.makeUserRequest<any>('https://api.spotify.com/v1/me', userToken, 'getCurrentUserProfile');
+
+    return result.success ? result.data : null;
+  }
+
+  /** Get the current user's playlists. Requires `playlist-read-private` scope. */
+  async getUserPlaylists(userToken: UserToken, limit: number = 20, offset: number = 0): Promise<any | null> {
+    const result = await this.makeUserRequest<any>(
+      `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset}`,
+      userToken,
+      'getUserPlaylists'
+    );
+
+    return result.success ? result.data : null;
+  }
+
+  /** Get the current user's top artists or tracks. Requires `user-top-read` scope. */
+  async getUserTopItems(
+    userToken: UserToken,
+    type: 'artists' | 'tracks',
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<any | null> {
+    const result = await this.makeUserRequest<any>(
+      `https://api.spotify.com/v1/me/top/${type}?limit=${limit}&offset=${offset}`,
+      userToken,
+      'getUserTopItems'
+    );
+
+    return result.success ? result.data : null;
+  }
+
+  /** Get the current user's saved tracks. Requires `user-library-read` scope. */
+  async getUserSavedTracks(userToken: UserToken, limit: number = 20, offset: number = 0): Promise<any | null> {
+    const result = await this.makeUserRequest<any>(
+      `https://api.spotify.com/v1/me/tracks?limit=${limit}&offset=${offset}`,
+      userToken,
+      'getUserSavedTracks'
+    );
+
+    return result.success ? result.data : null;
   }
 
   /**
