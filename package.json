@@ -1,6 +1,6 @@
 {
   "name": "@benliam12/spotify-api-helper",
-  "version": "1.0.0-DEV.6",
+  "version": "1.0.0-DEV.7",
   "description": "A utility package for Node.js",
   "type": "module",
   "main": "dist/index.js",
